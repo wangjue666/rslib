@@ -31,7 +31,10 @@ class Foo {
     }
 }
 function bar() {}
-export { Foo };
+function foo(options = {}) {
+    console.log(options);
+}
+export { Foo, foo };
 "
 `;
 
@@ -42,6 +45,9 @@ exports[`should downgrade class private method with output.syntax config 2`] = `
     }
     #bar() {}
 }
-export { Foo };
+function foo(options = {}) {
+    console.log(options);
+}
+export { Foo, foo };
 "
 `;

@@ -8,28 +8,33 @@ describe('transformSyntaxToBrowserslist', () => {
   test('esX', () => {
     expect(transformSyntaxToBrowserslist('es6')).toMatchInlineSnapshot(`
       [
-        "Chrome >= 63.0.0",
-        "Edge >= 79.0.0",
-        "Firefox >= 67.0.0",
-        "iOS >= 13.0.0",
-        "node > 12.20.0 and node < 13.0.0",
-        "node > 13.2.0",
-        "Opera >= 50.0.0",
-        "Safari >= 13.0.0",
+        "chrome >= 51",
+        "opera >= 38",
+        "edge >= 79",
+        "firefox >= 53",
+        "safari >= 16.3",
+        "node >= 6.5",
+        "deno >= 1",
+        "ios >= 16.3",
+        "samsung >= 5",
+        "opera_mobile >= 41",
+        "electron >= 1.2",
       ]
     `);
 
     expect(transformSyntaxToBrowserslist('es2018')).toMatchInlineSnapshot(`
       [
-        "Chrome >= 64.0.0",
-        "Edge >= 79.0.0",
-        "Firefox >= 78.0.0",
-        "iOS >= 16.4.0",
-        "node > 18.20.0 and node < 19.0.0",
-        "node > 20.12.0 and node < 21.0.0",
-        "node > 21.3.0",
-        "Opera >= 51.0.0",
-        "Safari >= 16.4.0",
+        "chrome >= 60",
+        "opera >= 47",
+        "edge >= 79",
+        "firefox >= 55",
+        "safari >= 16.3",
+        "node >= 8.3",
+        "deno >= 1",
+        "ios >= 16.3",
+        "samsung >= 8",
+        "opera_mobile >= 44",
+        "electron >= 2.0",
       ]
     `);
 

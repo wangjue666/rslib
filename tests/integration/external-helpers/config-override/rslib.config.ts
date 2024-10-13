@@ -4,7 +4,7 @@ import { generateBundleEsmConfig } from 'test-helper';
 export default defineConfig({
   lib: [
     generateBundleEsmConfig({
-      syntax: 'es5',
+      syntax: 'es2015',
       externalHelpers: true,
       tools: {
         swc: {

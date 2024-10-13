@@ -34,6 +34,7 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
+    "generate-ecma-version-browerslist": "tsx scripts/generateEcmaVersionBrowserslist/index.ts",
     "prebundle": "prebundle"
   },
   "dependencies": {
