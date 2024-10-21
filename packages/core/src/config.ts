@@ -86,28 +86,15 @@ async function isFileExist(filePath: string) {
 }
 
 const findConfig = async (basePath: string): Promise<string | undefined> => {
-  return new Promise<string | undefined>((resolve) => {
-    const arr: boolean[] = new Array(DEFAULT_CONFIG_EXTENSIONS.length).fill(
-      null,
-    );
-    DEFAULT_CONFIG_EXTENSIONS.forEach(async (ext, index) => {
-      const configPath = basePath + ext;
-      const isExist = await isFileExist(configPath);
-      arr[index] = isExist;
-      const allResolved = arr.slice(0, index).every((i) => i === false);
+  const pathPromises: Promise<string | false>[] = DEFAULT_CONFIG_EXTENSIONS.map((ext) => {
+    const p = basePath + ext;
+    return isFileExist(p).then((isExist) => {
+      return isExist && p;
+    })
+  })
 
-      if (allResolved) {
-        if (isExist) {
-          resolve(configPath);
-          return;
-        }
-        if (arr.every((i) => i === false)) {
-          resolve(undefined);
-          return;
-        }
-      }
-    });
-  });
+  const paths: (string | false)[] = await Promise.all(pathPromises);
+  return (paths.find((item) => !item) as string | undefined) ;
 };
 
 const resolveConfigPath = async (
