@@ -9,9 +9,11 @@ export async function build(
 ): Promise<RsbuildInstance> {
   const rsbuildInstance = await initRsbuild(config);
 
-  await rsbuildInstance.build({
-    watch: options?.watch,
-  });
+  console.log(options);
+  await rsbuildInstance.startDevServer();
+  // await rsbuildInstance.build({
+  //   watch: options?.watch,
+  // });
 
   return rsbuildInstance;
 }
