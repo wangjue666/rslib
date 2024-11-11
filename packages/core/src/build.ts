@@ -7,7 +7,7 @@ export async function build(
   config: RslibConfig,
   options?: BuildOptions,
 ): Promise<RsbuildInstance> {
-  const environments = await composeRsbuildEnvironments(config);
+  const { environments } = await composeRsbuildEnvironments(config);
   const rsbuildInstance = await createRsbuild({
     rsbuildConfig: {
       environments: pruneEnvironments(environments, options?.lib),

@@ -1198,11 +1198,22 @@ export async function composeCreateRsbuildConfig(
   return composedRsbuildConfig;
 }
 
+type EnvironmentWithInfo = {
+  config: EnvironmentConfig;
+  name: string;
+  format: Format;
+};
+
 export async function composeRsbuildEnvironments(
   rslibConfig: RslibConfig,
-): Promise<Record<string, EnvironmentConfig>> {
+): Promise<{
+  environments: Record<string, EnvironmentConfig>;
+  environmentWithInfos: EnvironmentWithInfo[];
+}> {
   const rsbuildConfigObject = await composeCreateRsbuildConfig(rslibConfig);
   const environments: RsbuildConfig['environments'] = {};
+  const environmentWithInfos: EnvironmentWithInfo[] = [];
+
   const formatCount: Record<Format, number> = rsbuildConfigObject.reduce(
     (acc, { format }) => {
       acc[format] = (acc[format] ?? 0) + 1;
@@ -1221,13 +1232,14 @@ export async function composeRsbuildEnvironments(
   for (const { format, config } of rsbuildConfigObject) {
     const currentFormatCount = formatCount[format];
     const currentFormatIndex = formatIndex[format]++;
+    const name =
+      currentFormatCount === 1 ? format : `${format}${currentFormatIndex}`;
 
-    environments[
-      currentFormatCount === 1 ? format : `${format}${currentFormatIndex}`
-    ] = config;
+    environments[name] = config;
+    environmentWithInfos.push({ name, format, config });
   }
 
-  return environments;
+  return { environments, environmentWithInfos };
 }
 
 export const pruneEnvironments = (

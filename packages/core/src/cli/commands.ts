@@ -25,6 +25,10 @@ export type InspectOptions = CommonOptions & {
   verbose?: boolean;
 };
 
+const repeatableOption = (value: string, previous: string[]) => {
+  return (previous ?? []).concat([value]);
+};
+
 const applyCommonOptions = (command: Command) => {
   command
     .option(
@@ -34,11 +38,12 @@ const applyCommonOptions = (command: Command) => {
     .option(
       '--env-mode <mode>',
       'specify the env mode to load the `.env.[mode]` file',
+    )
+    .option(
+      '--lib <name>',
+      'specify the library (repeatable, e.g. --lib esm --lib cjs)',
+      repeatableOption,
     );
-};
-
-const repeatableOption = (value: string, previous: string[]) => {
-  return (previous ?? []).concat([value]);
 };
 
 export function runCli(): void {
@@ -51,11 +56,6 @@ export function runCli(): void {
   [buildCommand, inspectCommand, mfDevCommand].forEach(applyCommonOptions);
 
   buildCommand
-    .option(
-      '--lib <name>',
-      'build the specified library (may be repeated)',
-      repeatableOption,
-    )
     .option('-w --watch', 'turn on watch mode, watch for changes and rebuild')
     .description('build the library for production')
     .action(async (options: BuildOptions) => {
@@ -75,11 +75,6 @@ export function runCli(): void {
   inspectCommand
     .description('inspect the Rsbuild / Rspack configs of Rslib projects')
     .option(
-      '--lib <name>',
-      'inspect the specified library (may be repeated)',
-      repeatableOption,
-    )
-    .option(
       '--output <output>',
       'specify inspect content output path',
       '.rsbuild',
@@ -92,7 +87,7 @@ export function runCli(): void {
           path: options.config,
           envMode: options.envMode,
         });
-        const environments = await composeRsbuildEnvironments(rslibConfig);
+        const { environments } = await composeRsbuildEnvironments(rslibConfig);
         const rsbuildInstance = await createRsbuild({
           rsbuildConfig: {
             environments: pruneEnvironments(environments, options.lib),
@@ -119,7 +114,8 @@ export function runCli(): void {
           path: options.config,
           envMode: options.envMode,
         });
-        await startMFDevServer(rslibConfig);
+        // const environments = await composeRsbuildEnvironments(rslibConfig);
+        await startMFDevServer(rslibConfig, options);
       } catch (err) {
         logger.error('Failed to start mf dev.');
         logger.error(err);

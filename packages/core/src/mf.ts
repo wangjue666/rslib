@@ -1,38 +1,53 @@
 import { createRsbuild, mergeRsbuildConfig } from '@rsbuild/core';
-import { composeCreateRsbuildConfig } from './config';
+import { composeRsbuildEnvironments, pruneEnvironments } from './config';
 
 import type { RsbuildConfig, RsbuildInstance } from '@rsbuild/core';
+import type { CommonOptions } from './cli/commands';
 import type { RslibConfig } from './types';
 
 export async function startMFDevServer(
-  config: RslibConfig,
-): Promise<RsbuildInstance | undefined> {
-  const rsbuildInstance = await initMFRsbuild(config);
-  return rsbuildInstance;
-}
-
-async function initMFRsbuild(
   rslibConfig: RslibConfig,
+  options?: CommonOptions,
 ): Promise<RsbuildInstance | undefined> {
-  const rsbuildConfigObject = await composeCreateRsbuildConfig(rslibConfig);
-  const mfRsbuildConfig = rsbuildConfigObject.find(
-    (config) => config.format === 'mf',
+  const { environments, environmentWithInfos } =
+    await composeRsbuildEnvironments(rslibConfig);
+  const selectedEnvironmentNames = environmentWithInfos
+    .filter((env) => {
+      const isMf = env.format === 'mf';
+
+      if (!options?.lib) {
+        return isMf;
+      }
+
+      return options.lib.includes(env.name);
+    })
+    .map((env) => env.name);
+  const selectedEnvironments = pruneEnvironments(
+    environments,
+    selectedEnvironmentNames,
   );
 
-  if (!mfRsbuildConfig) {
+  if (!selectedEnvironmentNames.length) {
     // no mf format, return.
     return;
   }
 
-  mfRsbuildConfig.config = changeEnvToDev(mfRsbuildConfig.config);
+  for (const env of Object.keys(selectedEnvironments)) {
+    selectedEnvironments[env] = changeModeToDevelopment(
+      selectedEnvironments[env]!,
+    );
+  }
+
   const rsbuildInstance = await createRsbuild({
-    rsbuildConfig: mfRsbuildConfig.config,
+    rsbuildConfig: {
+      environments: selectedEnvironments,
+    },
   });
   await rsbuildInstance.startDevServer();
   return rsbuildInstance;
 }
 
-function changeEnvToDev(rsbuildConfig: RsbuildConfig) {
+function changeModeToDevelopment(rsbuildConfig: RsbuildConfig) {
   return mergeRsbuildConfig(rsbuildConfig, {
     mode: 'development',
     dev: {
