@@ -230,6 +230,7 @@ exports[`Should compose create Rsbuild config correctly > Merge Rsbuild config 1
       },
     },
     "format": "esm",
+    "id": undefined,
   },
   {
     "config": {
@@ -455,6 +456,7 @@ exports[`Should compose create Rsbuild config correctly > Merge Rsbuild config 1
       },
     },
     "format": "cjs",
+    "id": undefined,
   },
   {
     "config": {
@@ -664,6 +666,7 @@ exports[`Should compose create Rsbuild config correctly > Merge Rsbuild config 1
       },
     },
     "format": "umd",
+    "id": undefined,
   },
 ]
 `;

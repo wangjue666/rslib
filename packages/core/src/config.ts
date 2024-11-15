@@ -33,6 +33,7 @@ import type {
   AutoExternal,
   BannerAndFooter,
   DeepRequired,
+  ExcludesFalse,
   Format,
   LibConfig,
   LibOnlyConfig,
@@ -1182,7 +1183,7 @@ async function composeLibRsbuildConfig(config: LibConfig, configPath: string) {
 export async function composeCreateRsbuildConfig(
   rslibConfig: RslibConfig,
   path?: string,
-): Promise<{ format: Format; config: RsbuildConfig }[]> {
+): Promise<{ id?: string; format: Format; config: RsbuildConfig }[]> {
   const constantRsbuildConfig = await createConstantRsbuildConfig();
   const configPath = path ?? rslibConfig._privateMeta?.configFilePath!;
   const { lib: libConfigsArray, ...sharedRsbuildConfig } = rslibConfig;
@@ -1217,6 +1218,7 @@ export async function composeCreateRsbuildConfig(
     delete userConfig.output.externals;
 
     return {
+      id: libConfig.id,
       format: libConfig.format!,
       // The merge order represents the priority of the configuration
       // The priorities from high to low are as follows:
@@ -1230,6 +1232,7 @@ export async function composeCreateRsbuildConfig(
         constantRsbuildConfig,
         libRsbuildConfig,
         omit<LibConfig, keyof LibOnlyConfig>(userConfig, {
+          id: true,
           bundle: true,
           format: true,
           autoExtension: true,
@@ -1254,9 +1257,17 @@ export async function composeCreateRsbuildConfig(
 export async function composeRsbuildEnvironments(
   rslibConfig: RslibConfig,
 ): Promise<Record<string, EnvironmentConfig>> {
-  const rsbuildConfigObject = await composeCreateRsbuildConfig(rslibConfig);
+  const rsbuildConfigWithLibInfo =
+    await composeCreateRsbuildConfig(rslibConfig);
+
+  // User provided ids should take precedence over generated ids.
+  const usedIds = new Set<string>(
+    rsbuildConfigWithLibInfo
+      .map(({ id }) => id)
+      .filter(Boolean as any as ExcludesFalse),
+  );
   const environments: RsbuildConfig['environments'] = {};
-  const formatCount: Record<Format, number> = rsbuildConfigObject.reduce(
+  const formatCount: Record<Format, number> = rsbuildConfigWithLibInfo.reduce(
     (acc, { format }) => {
       acc[format] = (acc[format] ?? 0) + 1;
       return acc;
@@ -1264,20 +1275,25 @@ export async function composeRsbuildEnvironments(
     {} as Record<Format, number>,
   );
 
-  const formatIndex: Record<Format, number> = {
-    esm: 0,
-    cjs: 0,
-    umd: 0,
-    mf: 0,
+  const getDefaultId = (format: Format): string => {
+    const getMaybeId = () => {
+      let index = 0;
+      while (usedIds.has(`${format}${index}`)) {
+        index++;
+      }
+
+      const finalId =
+        formatCount[format] === 1 && index === 0 ? '' : `${format}${index}`;
+      usedIds.add(finalId);
+      return finalId;
+    };
+
+    return getMaybeId();
   };
 
-  for (const { format, config } of rsbuildConfigObject) {
-    const currentFormatCount = formatCount[format];
-    const currentFormatIndex = formatIndex[format]++;
-
-    environments[
-      currentFormatCount === 1 ? format : `${format}${currentFormatIndex}`
-    ] = config;
+  for (const { format, id, config } of rsbuildConfigWithLibInfo) {
+    const libId = typeof id === 'string' ? id : getDefaultId(format);
+    environments[libId] = config;
   }
 
   return environments;
